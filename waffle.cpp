@@ -270,13 +270,13 @@ std::wostream & operator<<(std::wostream & out, IDownloadProgress * progress)
 	switch (phase)
 	{
 	case dphInitializing:
-		return out << std::format(L"Initializing {0: 3d}%", percent);
+		return out << std::format(L"Initialize{0:4d}%", percent);
 		break;
 	case dphDownloading:
-		return out << std::format(L"Downloading {0: 3d}%", percent); // TODO: バイト単位の表示に変えてみる
+		return out << std::format(L"Download{0:4d}%", percent); // TODO: バイト単位の表示に変えてみる
 		break;
 	case dphVerifying:
-		return out << std::format(L"Verifying {0: 3d}%", percent);
+		return out << std::format(L"Verify{0:4d}%", percent);
 		break;
 	}
 
@@ -292,7 +292,7 @@ std::wostream & operator<<(std::wostream & out, IInstallationProgress * progress
 		throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 	}
 
-	return out << std::format(L"Installation {0: 3d}%", percent);
+	return out << std::format(L"Install{0:4d}%", percent);
 }
 
 std::wostream & operator<<(std::wostream & out, IUpdateDownloadResult * result)
