@@ -5,25 +5,33 @@
 #include <windows.h>
 #include <comdef.h>
 #include <wuapi.h>
+#include <wuerror.h>
 
-template<typename T>
+	template<typename T>
 using com_ptr_t = _com_ptr_t<_com_IIID<T, &__uuidof(T)>>;
 
 #include <cstdlib>
+#include <format>
 #include <iostream>
 #include <functional>
 #include <system_error>
 
 std::wostream & operator<<(std::wostream & out, const char * mbs);
 std::wostream & operator<<(std::wostream & out, IUpdate * update);
-std::wostream & operator<<(std::wostream & out, IDownloadProgress * update);
-std::wostream & operator<<(std::wostream & out, IInstallationProgress * update);
+std::wostream & operator<<(std::wostream & out, IDownloadProgress * progress);
+std::wostream & operator<<(std::wostream & out, IInstallationProgress * progress);
+std::wostream & operator<<(std::wostream & out, IUpdateDownloadResult * result);
+std::wostream & operator<<(std::wostream & out, IUpdateInstallationResult * result);
+std::wostream & operator<<(std::wostream & out, OperationResultCode code);
 
 namespace waffle
 {
 	class Session;
 
 	Session CreateSession();
+
+	using DownloadCallback = std::function<void(long, OperationResultCode, IUpdate *, IUpdateDownloadResult *, IDownloadProgress *)>;
+	using InstallationCallback = std::function<void(long, OperationResultCode, IUpdate *, IUpdateInstallationResult *, IInstallationProgress *)>;
 
 	class Updates
 	{
@@ -55,9 +63,6 @@ namespace waffle
 			return m_updates;
 		}
 	};
-
-	using DownloadCallback = std::function<void(long, IUpdate *, IDownloadProgress *)>;
-	using InstallationCallback = std::function<void(long, IUpdate *, IInstallationProgress *)>;
 
 	class Session
 	{
@@ -205,64 +210,113 @@ namespace waffle
 		}
 	};
 
-	template<class CallbakType, class ArgType, class ProgressType>
-	HRESULT InvokeCallback(Updates & updates, CallbakType & callback, ArgType * args, ProgressType & progress)
+	template<class Job, class Callback, class CallbackArgs, class Progress, class Result>
+	class ProgressChangedCallback : public Unknown<Callback>
 	{
-		if (auto hr = args->get_Progress(&progress); FAILED(hr))
+		typedef HRESULT(STDMETHODCALLTYPE Callback:: * ChangedMethod)(Job *, CallbackArgs *);
+		typedef std::function<void(long, OperationResultCode, IUpdate *, Result *, Progress *)> WaffleCallback;
+
+		Updates & m_updates;
+		WaffleCallback m_callback;
+
+	public:
+		ProgressChangedCallback(Updates & updates, WaffleCallback callback, ChangedMethod changed) : m_updates(updates), m_callback(callback)
+		{}
+
+		HRESULT STDMETHODCALLTYPE Invoke(Job * job, CallbackArgs * args) override
 		{
-			return hr;
+			com_ptr_t<Progress> progress;
+
+			if (auto hr = args->get_Progress(&progress); FAILED(hr))
+			{
+				return hr;
+			}
+
+			LONG index{};
+
+			if (auto hr = progress->get_CurrentUpdateIndex(&index); FAILED(hr))
+			{
+				return hr;
+			}
+
+			com_ptr_t<IUpdate> update;
+
+			if (auto hr = m_updates->get_Item(index, &update); FAILED(hr))
+			{
+				return hr;
+			}
+
+			com_ptr_t<Result> result;
+
+			if (auto hr = progress->GetUpdateResult(index, &result); FAILED(hr))
+			{
+				return hr;
+			}
+
+			OperationResultCode code{};
+
+			if (auto hr = result->get_ResultCode(&code); FAILED(hr))
+			{
+				return hr;
+			}
+
+			try
+			{
+				m_callback(index, code, update, result, progress);
+			}
+			catch (const std::system_error & e)
+			{
+				return HRESULT_FROM_WIN32(e.code().value());
+			}
+			catch (...)
+			{
+				return E_FAIL;
+			}
+
+			return S_OK;
+		}
+	};
+
+	template<class Result>
+	LONG GetWUAErrorCode(Result result)
+	{
+		// https://learn.microsoft.com/en-us/windows/win32/wua_sdk/wua-success-and-error-codes-
+
+		LONG code = 0;
+
+		if (auto hr = result->get_HResult(&code); FAILED(hr))
+		{
+			throw std::system_error(hr, std::system_category(), __FUNCTION__);
 		}
 
-		LONG index{};
-
-		if (auto hr = progress->get_CurrentUpdateIndex(&index); FAILED(hr))
-		{
-			return hr;
-		}
-
-		com_ptr_t<IUpdate> update;
-
-		if (auto hr = updates->get_Item(index, &update); FAILED(hr))
-		{
-			return hr;
-		}
-
-		callback(index, update, progress);
-
-		return S_OK;
+		return code;
 	}
 
-	struct DownloadProgressChangedCallback : public Unknown<IDownloadProgressChangedCallback>
+	template<class Result>
+	OperationResultCode GetOperationCode(Result result)
 	{
-		Updates & m_updates;
+		OperationResultCode code{};
 
-		DownloadCallback m_callback;
-
-		DownloadProgressChangedCallback(Updates & updates, DownloadCallback & callback) : m_updates(updates), m_callback(callback)
-		{}
-
-		HRESULT STDMETHODCALLTYPE Invoke(IDownloadJob * job, IDownloadProgressChangedCallbackArgs * args) override
+		if (auto hr = result->get_ResultCode(&code); FAILED(hr))
 		{
-			com_ptr_t<IDownloadProgress> progress;
-
-			return InvokeCallback(m_updates, m_callback,args, progress);
+			throw std::system_error(hr, std::system_category(), __FUNCTION__);
 		}
-	};
 
-	struct InstallationProgressChangedCallback : public Unknown<IInstallationProgressChangedCallback>
+		return code;
+	}
+
+	template<class Result>
+	bool GetRebootRequired(Result result)
 	{
-		Updates & m_updates;
+		VARIANT_BOOL rebootRequired{};
 
-		InstallationCallback m_callback;
-
-		InstallationProgressChangedCallback(Updates & updates, InstallationCallback & callback) : m_updates(updates), m_callback(callback)
-		{}
-
-		HRESULT STDMETHODCALLTYPE Invoke(IInstallationJob * job, IInstallationProgressChangedCallbackArgs * args) override
+		if (auto hr = result->get_RebootRequired(&rebootRequired); FAILED(hr))
 		{
-			com_ptr_t<IInstallationProgress> progress;
-
-			return InvokeCallback(m_updates, m_callback,args, progress);
+			throw std::system_error(hr, std::system_category(), __FUNCTION__);
 		}
-	};
+
+		return (rebootRequired == VARIANT_TRUE);
+	}
+
+	const char * GetWUAErrorMessage(LONG code);
 }
