@@ -39,7 +39,7 @@ namespace waffle
 			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 		}
 
-		for (auto index = m_count; index > 0; --index)
+		for (auto index = m_count - 1; index > 0; --index)
 		{
 			com_ptr_t<IUpdate> item;
 
