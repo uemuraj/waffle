@@ -30,10 +30,10 @@ struct Callback
 		case orcNotStarted:
 		case orcSucceeded:
 		case orcInProgress:
-			std::cout << "\b\b\b\b" << progress << std::endl;
+			std::cout << "\b\b\b\b" << progress;
 			break;
 		default:
-			std::cout << "\b\b\b\b" << result << std::endl;
+			std::cout << "\b\b\b\b" << result;
 			break;
 		}
 	}
@@ -51,7 +51,7 @@ int wmain()
 	{
 		std::locale::global(std::locale(""));
 
-//		VirtualTerminalMode mode;
+		VirtualTerminalMode mode;
 
 		std::cout << std::format("Searching for updates... {} sec", msTimeout / 1000) << std::endl;
 
