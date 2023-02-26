@@ -29,18 +29,15 @@ struct Callback
 			std::wcout << L"\x1b8";
 		}
 
-		// TODO: i’»ó‹µ‚ðŒã‚ë‚É‚µ‚Ä‘‚«Š·‚¦‚Ì—Ê‚ðŒ¸‚ç‚·
-
 		switch (code)
 		{
 		case orcNotStarted:
-			break;
 		case orcSucceeded:
 		case orcInProgress:
-			std::wcout << update << L' ' << progress << std::endl;
+			std::wcout << progress << std::endl;
 			break;
 		default:
-			std::wcout << update << L' ' << result << std::endl;
+			std::wcout << result << std::endl;
 			break;
 		}
 	}
