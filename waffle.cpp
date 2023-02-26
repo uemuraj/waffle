@@ -232,22 +232,6 @@ namespace waffle
 	}
 }
 
-std::ostream & operator<<(std::ostream & out, const wchar_t * wcs)
-{
-	int i{};
-
-	std::string mb(MB_CUR_MAX, 0);
-
-	while (*wcs)
-	{
-		wctomb_s(&i, mb.data(), mb.size(), *wcs++);
-
-		out << mb;
-	}
-
-	return out;
-}
-
 std::wostream & operator<<(std::wostream & out, const char * mbs)
 {
 	wchar_t wc{};
@@ -260,18 +244,6 @@ std::wostream & operator<<(std::wostream & out, const char * mbs)
 	return out;
 }
 
-std::ostream & operator<<(std::ostream & out, IUpdate * update)
-{
-	_bstr_t title;
-
-	if (auto hr = update->get_Title(title.GetAddress()); FAILED(hr))
-	{
-		throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-	}
-
-	return out << (const wchar_t *) title;
-}
-
 std::wostream & operator<<(std::wostream & out, IUpdate * update)
 {
 	_bstr_t title;
@@ -282,38 +254,6 @@ std::wostream & operator<<(std::wostream & out, IUpdate * update)
 	}
 
 	return out << (const wchar_t *) title;
-}
-
-std::ostream & operator<<(std::ostream & out, IDownloadProgress * progress)
-{
-	LONG percent{};
-
-	if (auto hr = progress->get_CurrentUpdatePercentComplete(&percent); FAILED(hr))
-	{
-		throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-	}
-
-	DownloadPhase phase{};
-
-	if (auto hr = progress->get_CurrentUpdateDownloadPhase(&phase); FAILED(hr))
-	{
-		throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-	}
-
-	switch (phase)
-	{
-	case dphInitializing:
-		return out << std::format("{0:4d}%", percent);
-		break;
-	case dphDownloading:
-		return out << std::format("{0:4d}%", percent); // TODO: バイト単位の表示に変えてみる
-		break;
-	case dphVerifying:
-		return out << std::format("{0:4d}%", percent);
-		break;
-	}
-
-	return out;
 }
 
 std::wostream & operator<<(std::wostream & out, IDownloadProgress * progress)
@@ -348,18 +288,6 @@ std::wostream & operator<<(std::wostream & out, IDownloadProgress * progress)
 	return out;
 }
 
-std::ostream & operator<<(std::ostream & out, IInstallationProgress * progress)
-{
-	LONG percent{};
-
-	if (auto hr = progress->get_CurrentUpdatePercentComplete(&percent); FAILED(hr))
-	{
-		throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-	}
-
-	return out << std::format("{0:4d}%", percent);
-}
-
 std::wostream & operator<<(std::wostream & out, IInstallationProgress * progress)
 {
 	LONG percent{};
@@ -370,18 +298,6 @@ std::wostream & operator<<(std::wostream & out, IInstallationProgress * progress
 	}
 
 	return out << std::format(L"{0:4d}%", percent);
-}
-
-std::ostream & operator<<(std::ostream & out, IUpdateDownloadResult * result)
-{
-	auto code = waffle::GetWUAErrorCode(result);
-
-	if (auto msg = waffle::GetWUAErrorMessage(code); *msg != '\0')
-	{
-		return out << msg;
-	}
-
-	return out << std::format("Download Result 0x{0:08X}.", code);
 }
 
 std::wostream & operator<<(std::wostream & out, IUpdateDownloadResult * result)
@@ -396,18 +312,6 @@ std::wostream & operator<<(std::wostream & out, IUpdateDownloadResult * result)
 	return out << std::format(L"Download Result 0x{0:08X}.", code);
 }
 
-std::ostream & operator<<(std::ostream & out, IUpdateInstallationResult * result)
-{
-	auto code = waffle::GetWUAErrorCode(result);
-
-	if (auto msg = waffle::GetWUAErrorMessage(code); *msg != '\0')
-	{
-		return out << msg;
-	}
-
-	return out << std::format("Installation Result 0x{0:08X}.", code);
-}
-
 std::wostream & operator<<(std::wostream & out, IUpdateInstallationResult * result)
 {
 	auto code = waffle::GetWUAErrorCode(result);
@@ -418,27 +322,6 @@ std::wostream & operator<<(std::wostream & out, IUpdateInstallationResult * resu
 	}
 
 	return out << std::format(L"Installation Result 0x{0:08X}.", code);
-}
-
-std::ostream & operator<<(std::ostream & out, OperationResultCode code)
-{
-	switch (code)
-	{
-	case orcNotStarted:
-		return out << "Not Started";
-	case orcInProgress:
-		return out << "In Progress";
-	case orcSucceeded:
-		return out << "Succeeded";
-	case orcSucceededWithErrors:
-		return out << "Succeeded With Errors";
-	case orcFailed:
-		return out << "Failed";
-	case orcAborted:
-		return out << "Aborted";
-	default:
-		return out << std::format("Operation Result {}.", (int) code);
-	}
 }
 
 std::wostream & operator<<(std::wostream & out, OperationResultCode code)

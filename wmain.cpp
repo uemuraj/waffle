@@ -16,12 +16,12 @@ struct Callback
 
 	void operator()(long index, OperationResultCode code, IUpdate * update, IUpdateDownloadResult * result, IDownloadProgress * progress)
 	{
-		std::cout << std::format("{:3d}.") << update << progress << ' ' << result;
+		std::wcout << index << ' ' << update << progress << ' ' << result;
 	}
 
 	void operator()(long index, OperationResultCode code, IUpdate * update, IUpdateInstallationResult * result, IInstallationProgress * progress)
 	{
-		std::cout << std::format("{:3d}.") << update << progress << ' ' << result;
+		std::wcout << index << ' ' << update << progress << ' ' << result;
 	}
 };
 
@@ -37,7 +37,7 @@ int wmain()
 	{
 		std::locale::global(std::locale(""));
 
-		std::cout << std::format("Searching for updates... {} sec", msTimeout / 1000) << std::endl;
+		std::wcout << std::format(L"Searching for updates... {} sec", msTimeout / 1000) << std::endl;
 
 		auto session = waffle::CreateSession();
 		auto updates = session.Search(_bstr_t(szCriteria), msTimeout);
@@ -53,12 +53,12 @@ int wmain()
 			return 0;
 		}
 
-		std::cout << "Reboot Required." << std::endl;
+		std::wcout << L"Reboot Required." << std::endl;
 		return 1;
 	}
 	catch (const std::exception & e)
 	{
-		std::cout << e.what() << std::endl;
+		std::wcout << e.what() << std::endl;
 		return -1;
 	}
 }
