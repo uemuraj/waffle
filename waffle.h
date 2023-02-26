@@ -78,7 +78,11 @@ namespace waffle
 
 		void Download(Updates & updates, DownloadCallback callback);
 		void Install(Updates & updates, InstallationCallback callback);
-		bool RebootRequired();
+
+		bool RebootRequired()
+		{
+			return m_rebootRequired;
+		}
 	};
 
 	class CompleteEvent

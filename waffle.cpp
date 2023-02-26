@@ -38,6 +38,31 @@ namespace waffle
 		{
 			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 		}
+
+		for (auto index = m_count; index > 0; --index)
+		{
+			com_ptr_t<IUpdate> item;
+
+			if (auto hr = m_updates->get_Item(index, &item); FAILED(hr))
+			{
+				throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+			}
+
+			com_ptr_t<IUpdate2> update2;
+
+			if (auto hr = item->QueryInterface(&update2); FAILED(hr))
+			{
+				throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+			}
+
+			if (GetRebootRequired(update2))
+			{
+				if (auto hr = m_updates->RemoveAt(index); FAILED(hr))
+				{
+					throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+				}
+			}
+		}
 	}
 
 	Session::Session() : m_rebootRequired(false)
@@ -51,6 +76,15 @@ namespace waffle
 		{
 			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 		}
+
+		com_ptr_t<ISystemInformation> sysinfo;
+
+		if (auto hr = sysinfo.CreateInstance(L"Microsoft.Update.SystemInfo"); FAILED(hr))
+		{
+			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+		}
+
+		m_rebootRequired = GetRebootRequired(sysinfo);
 	}
 
 	Updates Session::Search(BSTR criteria, unsigned long timeout)
@@ -134,23 +168,6 @@ namespace waffle
 		m_rebootRequired = GetRebootRequired(result);
 	}
 
-	bool Session::RebootRequired()
-	{
-		if (!m_rebootRequired)
-		{
-			com_ptr_t<ISystemInformation> sysinfo;
-
-			if (auto hr = sysinfo.CreateInstance(L"Microsoft.Update.SystemInfo"); FAILED(hr))
-			{
-				throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-			}
-
-			return GetRebootRequired(sysinfo);
-		}
-
-		return m_rebootRequired;
-	}
-
 	CompleteEvent::CompleteEvent()
 	{
 		m_event = ::CreateEvent(nullptr, true, false, nullptr);
@@ -204,43 +221,6 @@ std::wostream & operator<<(std::wostream & out, const char * mbs)
 
 std::wostream & operator<<(std::wostream & out, IUpdate * update)
 {
-#if 0
-	com_ptr_t<IStringCollection> articles;
-
-	if (auto hr = update->get_KBArticleIDs(&articles); FAILED(hr))
-	{
-		throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-	}
-
-	LONG count = 0;
-
-	if (auto hr = articles->get_Count(&count); FAILED(hr))
-	{
-		throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-	}
-
-	if (count > 0)
-	{
-		for (LONG index = 0; index < count; ++index)
-		{
-			_bstr_t article;
-
-			if (auto hr = articles->get_Item(index, article.GetAddress()); FAILED(hr))
-			{
-				throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-			}
-
-			if (index > 0)
-			{
-				out << L',';
-			}
-
-			out << L"KB" << (const wchar_t *) article;
-		}
-
-		out << L' ';
-	}
-#endif
 	_bstr_t title;
 
 	if (auto hr = update->get_Title(title.GetAddress()); FAILED(hr))
