@@ -8,34 +8,20 @@
 #include <format>
 #include <iostream>
 #include "waffle.h"
-#include "vtmode.h"
 
-template<class Result, class Progress>
 struct Callback
 {
 	long m_total;
 	long m_index{ -1 };
 
-	void operator()(long index, OperationResultCode code, IUpdate * update, Result * result, Progress * progress)
+	void operator()(long index, OperationResultCode code, IUpdate * update, IUpdateDownloadResult * result, IDownloadProgress * progress)
 	{
-		if (m_index < index)
-		{
-			m_index = index;
+		std::cout << std::format("{:3d}.") << update << progress << ' ' << result;
+	}
 
-			std::cout << update;
-		}
-
-		switch (code)
-		{
-		case orcNotStarted:
-		case orcSucceeded:
-		case orcInProgress:
-			std::cout << "\b\b\b\b" << progress;
-			break;
-		default:
-			std::cout << "\b\b\b\b" << result;
-			break;
-		}
+	void operator()(long index, OperationResultCode code, IUpdate * update, IUpdateInstallationResult * result, IInstallationProgress * progress)
+	{
+		std::cout << std::format("{:3d}.") << update << progress << ' ' << result;
 	}
 };
 
@@ -51,8 +37,6 @@ int wmain()
 	{
 		std::locale::global(std::locale(""));
 
-		VirtualTerminalMode mode;
-
 		std::cout << std::format("Searching for updates... {} sec", msTimeout / 1000) << std::endl;
 
 		auto session = waffle::CreateSession();
@@ -60,8 +44,8 @@ int wmain()
 
 		if (!updates.empty())
 		{
-			session.Download(updates, Callback<IUpdateDownloadResult, IDownloadProgress>{ updates.size() });
-			session.Install(updates, Callback<IUpdateInstallationResult, IInstallationProgress>{ updates.size() });
+			session.Download(updates, Callback{ updates.size() });
+			session.Install(updates, Callback{ updates.size() });
 		}
 
 		if (!session.RebootRequired())

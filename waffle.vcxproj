@@ -138,10 +138,8 @@
   <ItemGroup>
     <ClCompile Include="waffle.cpp" />
     <ClCompile Include="wmain.cpp" />
-    <ClCompile Include="vtmode.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="vtmode.h" />
     <ClInclude Include="waffle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

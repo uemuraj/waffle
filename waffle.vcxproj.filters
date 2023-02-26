@@ -2,11 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="waffle.h" />
-    <ClInclude Include="vtmode.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="waffle.cpp" />
     <ClCompile Include="wmain.cpp" />
-    <ClCompile Include="vtmode.cpp" />
   </ItemGroup>
 </Project>
