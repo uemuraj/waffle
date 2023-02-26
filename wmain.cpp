@@ -22,11 +22,11 @@ struct Callback
 		{
 			m_index = index;
 
-			std::wcout << update << L" \x1b7";
+			std::cout << update << L" \x1b7";
 		}
 		else
 		{
-			std::wcout << L"\x1b8";
+			std::cout << L"\x1b8";
 		}
 
 		switch (code)
@@ -34,10 +34,10 @@ struct Callback
 		case orcNotStarted:
 		case orcSucceeded:
 		case orcInProgress:
-			std::wcout << progress << std::endl;
+			std::cout << progress << std::endl;
 			break;
 		default:
-			std::wcout << result << std::endl;
+			std::cout << result << std::endl;
 			break;
 		}
 	}
@@ -55,9 +55,9 @@ int wmain()
 	{
 		std::locale::global(std::locale(""));
 
-		std::wcerr << std::format(L"Searching for updates... {} sec", msTimeout / 1000) << std::endl;
-
 		VirtualTerminalMode mode;
+
+		std::cout << std::format("Searching for updates... {} sec", msTimeout / 1000) << std::endl;
 
 		auto session = waffle::CreateSession();
 		auto updates = session.Search(_bstr_t(szCriteria), msTimeout);
@@ -73,12 +73,12 @@ int wmain()
 			return 0;
 		}
 
-		std::wcout << L"Reboot Required." << std::endl;
+		std::cout << "Reboot Required." << std::endl;
 		return 1;
 	}
 	catch (const std::exception & e)
 	{
-		std::wcerr << e.what() << std::endl;
+		std::cout << e.what() << std::endl;
 		return -1;
 	}
 }

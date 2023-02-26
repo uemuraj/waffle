@@ -25,7 +25,7 @@ VirtualTerminalMode::VirtualTerminalMode()
 
 VirtualTerminalMode::~VirtualTerminalMode() noexcept
 {
-	std::wcout << L"\x1b[!p";
+	std::cout << "\x1b[!p";
 
 	::SetConsoleMode(m_cout, m_mode);
 }

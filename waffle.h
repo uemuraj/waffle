@@ -16,13 +16,13 @@ using com_ptr_t = _com_ptr_t<_com_IIID<T, &__uuidof(T)>>;
 #include <functional>
 #include <system_error>
 
-std::wostream & operator<<(std::wostream & out, const char * mbs);
-std::wostream & operator<<(std::wostream & out, IUpdate * update);
-std::wostream & operator<<(std::wostream & out, IDownloadProgress * progress);
-std::wostream & operator<<(std::wostream & out, IInstallationProgress * progress);
-std::wostream & operator<<(std::wostream & out, IUpdateDownloadResult * result);
-std::wostream & operator<<(std::wostream & out, IUpdateInstallationResult * result);
-std::wostream & operator<<(std::wostream & out, OperationResultCode code);
+std::ostream & operator<<(std::ostream & out, const wchar_t * wcs);
+std::ostream & operator<<(std::ostream & out, IUpdate * update);
+std::ostream & operator<<(std::ostream & out, IDownloadProgress * progress);
+std::ostream & operator<<(std::ostream & out, IInstallationProgress * progress);
+std::ostream & operator<<(std::ostream & out, IUpdateDownloadResult * result);
+std::ostream & operator<<(std::ostream & out, IUpdateInstallationResult * result);
+std::ostream & operator<<(std::ostream & out, OperationResultCode code);
 
 namespace waffle
 {
