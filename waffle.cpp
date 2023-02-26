@@ -29,17 +29,26 @@ namespace waffle
 
 	Updates::Updates(com_ptr_t<ISearchResult> result) : m_count(0)
 	{
-		if (auto hr = result->get_Updates(&m_updates); FAILED(hr))
+		if (auto hr = m_updates.CreateInstance(L"Microsoft.Update.UpdateColl"); FAILED(hr))
 		{
 			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 		}
 
-		if (auto hr = m_updates->get_Count(&m_count); FAILED(hr))
+		com_ptr_t<IUpdateCollection> items;
+
+		if (auto hr = result->get_Updates(&items); FAILED(hr))
 		{
 			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 		}
 
-		for (auto index = m_count - 1; index >= 0; --index)
+		LONG count = 0;
+
+		if (auto hr = items->get_Count(&count); FAILED(hr))
+		{
+			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+		}
+
+		for (LONG index = 0; index < count; ++index)
 		{
 			com_ptr_t<IUpdate> item;
 
@@ -57,11 +66,17 @@ namespace waffle
 
 			if (GetRebootRequired(update2))
 			{
-				if (auto hr = m_updates->RemoveAt(index); FAILED(hr))
-				{
-					throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-				}
+				continue;
 			}
+
+			LONG retval{};
+
+			if (auto hr = m_updates->Add(item, &retval); FAILED(hr))
+			{
+				throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+			}
+
+			++m_count;
 		}
 	}
 
