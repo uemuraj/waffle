@@ -52,7 +52,7 @@ namespace waffle
 		{
 			com_ptr_t<IUpdate> item;
 
-			if (auto hr = m_updates->get_Item(index, &item); FAILED(hr))
+			if (auto hr = items->get_Item(index, &item); FAILED(hr))
 			{
 				throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 			}
