@@ -7,7 +7,7 @@
 #include <wuapi.h>
 #include <wuerror.h>
 
-	template<typename T>
+template<typename T>
 using com_ptr_t = _com_ptr_t<_com_IIID<T, &__uuidof(T)>>;
 
 #include <cstdlib>
@@ -40,8 +40,10 @@ namespace waffle
 		com_ptr_t<IUpdateCollection> m_updates;
 
 	public:
-		Updates(com_ptr_t<ISearchResult> result);
+		Updates();
 		~Updates() = default;
+
+		LONG Add(IUpdate * update);
 
 		bool empty() const noexcept
 		{

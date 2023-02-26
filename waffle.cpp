@@ -27,57 +27,26 @@ namespace waffle
 		return Session();
 	}
 
-	Updates::Updates(com_ptr_t<ISearchResult> result) : m_count(0)
+	Updates::Updates() : m_count(0)
 	{
 		if (auto hr = m_updates.CreateInstance(L"Microsoft.Update.UpdateColl"); FAILED(hr))
 		{
 			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 		}
+	}
 
-		com_ptr_t<IUpdateCollection> items;
+	LONG Updates::Add(IUpdate * update)
+	{
+		LONG index{};
 
-		if (auto hr = result->get_Updates(&items); FAILED(hr))
+		if (auto hr = m_updates->Add(update, &index); FAILED(hr))
 		{
 			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 		}
 
-		LONG count = 0;
+		++m_count;
 
-		if (auto hr = items->get_Count(&count); FAILED(hr))
-		{
-			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-		}
-
-		for (LONG index = 0; index < count; ++index)
-		{
-			com_ptr_t<IUpdate> item;
-
-			if (auto hr = items->get_Item(index, &item); FAILED(hr))
-			{
-				throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-			}
-
-			com_ptr_t<IUpdate2> update2;
-
-			if (auto hr = item->QueryInterface(&update2); FAILED(hr))
-			{
-				throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-			}
-
-			if (GetRebootRequired(update2))
-			{
-				continue;
-			}
-
-			LONG retval{};
-
-			if (auto hr = m_updates->Add(item, &retval); FAILED(hr))
-			{
-				throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
-			}
-
-			++m_count;
-		}
+		return index;
 	}
 
 	Session::Session() : m_rebootRequired(false)
@@ -120,7 +89,48 @@ namespace waffle
 			throw std::system_error(code, std::system_category(), MACRO_SOURCE_LOCATION());
 		}
 
-		return result;
+		com_ptr_t<IUpdateCollection> items;
+
+		if (auto hr = result->get_Updates(&items); FAILED(hr))
+		{
+			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+		}
+
+		LONG count = 0;
+
+		if (auto hr = items->get_Count(&count); FAILED(hr))
+		{
+			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+		}
+
+		Updates updates;
+
+		for (LONG index = 0; index < count; ++index)
+		{
+			com_ptr_t<IUpdate> item;
+
+			if (auto hr = items->get_Item(index, &item); FAILED(hr))
+			{
+				throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+			}
+
+			com_ptr_t<IUpdate2> update2;
+
+			if (auto hr = item->QueryInterface(&update2); FAILED(hr))
+			{
+				throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+			}
+
+			if (GetRebootRequired(update2))
+			{
+				m_rebootRequired = true;
+				continue;
+			}
+
+			updates.Add(item);
+		}
+
+		return updates;
 	}
 
 	void Session::Download(Updates & updates, DownloadCallback callback)
@@ -265,13 +275,13 @@ std::wostream & operator<<(std::wostream & out, IDownloadProgress * progress)
 	switch (phase)
 	{
 	case dphInitializing:
-		return out << std::format(L"Initialize{0:4d}%", percent);
+		return out << std::format(L"{0:4d}%", percent);
 		break;
 	case dphDownloading:
-		return out << std::format(L"Download{0:4d}%", percent); // TODO: バイト単位の表示に変えてみる
+		return out << std::format(L"{0:4d}%", percent); // TODO: バイト単位の表示に変えてみる
 		break;
 	case dphVerifying:
-		return out << std::format(L"Verify{0:4d}%", percent);
+		return out << std::format(L"{0:4d}%", percent);
 		break;
 	}
 
@@ -287,7 +297,7 @@ std::wostream & operator<<(std::wostream & out, IInstallationProgress * progress
 		throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 	}
 
-	return out << std::format(L"Install{0:4d}%", percent);
+	return out << std::format(L"{0:4d}%", percent);
 }
 
 std::wostream & operator<<(std::wostream & out, IUpdateDownloadResult * result)

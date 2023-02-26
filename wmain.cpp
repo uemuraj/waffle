@@ -5,8 +5,10 @@
 // 
 
 #include <locale>
+#include <format>
 #include <iostream>
 #include "waffle.h"
+#include "vtmode.h"
 
 template<class Result, class Progress>
 struct Callback
@@ -19,25 +21,26 @@ struct Callback
 		if (m_index < index)
 		{
 			m_index = index;
+
+			std::wcout << update << L" \x1b7";
 		}
 		else
 		{
-			// TODO: 仮想端末のエスケープシーケンスを利用して引き戻す
+			std::wcout << L"\x1b8";
 		}
 
-		// TODO: 100% がコールバックされないことがある
 		// TODO: 進捗状況を後ろにして書き換えの量を減らす
 
 		switch (code)
 		{
 		case orcNotStarted:
-		case orcSucceeded:
 			break;
+		case orcSucceeded:
 		case orcInProgress:
-			std::wcout << progress << L' ' << update << std::endl;
+			std::wcout << update << L' ' << progress << std::endl;
 			break;
 		default:
-			std::wcout << result << L' ' << update << std::endl;
+			std::wcout << update << L' ' << result << std::endl;
 			break;
 		}
 	}
@@ -55,7 +58,9 @@ int wmain()
 	{
 		std::locale::global(std::locale(""));
 
-		std::wcout << L"Searching for updates..." << std::endl;
+		std::wcerr << std::format(L"Searching for updates... {} sec", msTimeout / 1000) << std::endl;
+
+		VirtualTerminalMode mode;
 
 		auto session = waffle::CreateSession();
 		auto updates = session.Search(_bstr_t(szCriteria), msTimeout);
