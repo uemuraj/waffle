@@ -22,11 +22,7 @@ struct Callback
 		{
 			m_index = index;
 
-			std::cout << update << L" \x1b7";
-		}
-		else
-		{
-			std::cout << L"\x1b8";
+			std::cout << update;
 		}
 
 		switch (code)
@@ -34,10 +30,10 @@ struct Callback
 		case orcNotStarted:
 		case orcSucceeded:
 		case orcInProgress:
-			std::cout << progress << std::endl;
+			std::cout << "\b\b\b\b" << progress << std::endl;
 			break;
 		default:
-			std::cout << result << std::endl;
+			std::cout << "\b\b\b\b" << result << std::endl;
 			break;
 		}
 	}
@@ -55,7 +51,7 @@ int wmain()
 	{
 		std::locale::global(std::locale(""));
 
-		VirtualTerminalMode mode;
+//		VirtualTerminalMode mode;
 
 		std::cout << std::format("Searching for updates... {} sec", msTimeout / 1000) << std::endl;
 
