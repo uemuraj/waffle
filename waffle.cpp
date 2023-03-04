@@ -230,6 +230,30 @@ namespace waffle
 			throw std::system_error(::GetLastError(), std::system_category(), MACRO_SOURCE_LOCATION());
 		}
 	}
+
+	std::uintmax_t GetTotalBytesDownloaded(IDownloadProgress * progress)
+	{
+		DECIMAL bytes{};
+
+		if (auto hr = progress->get_TotalBytesDownloaded(&bytes); FAILED(hr))
+		{
+			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+		}
+
+		return bytes.Lo64;
+	}
+
+	std::uintmax_t GetTotalBytesToDownload(IDownloadProgress * progress)
+	{
+		DECIMAL bytes{};
+
+		if (auto hr = progress->get_TotalBytesToDownload(&bytes); FAILED(hr))
+		{
+			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
+		}
+
+		return bytes.Lo64;
+	}
 }
 
 std::wostream & operator<<(std::wostream & out, const char * mbs)

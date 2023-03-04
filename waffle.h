@@ -10,6 +10,7 @@
 template<typename T>
 using com_ptr_t = _com_ptr_t<_com_IIID<T, &__uuidof(T)>>;
 
+#include <cstdint>
 #include <cstdlib>
 #include <format>
 #include <iostream>
@@ -282,6 +283,22 @@ namespace waffle
 			return S_OK;
 		}
 	};
+
+	std::uintmax_t GetTotalBytesDownloaded(IDownloadProgress * progress);
+	std::uintmax_t GetTotalBytesToDownload(IDownloadProgress * progress);
+
+	template<class Progress>
+	LONG GetPercentComplete(Progress * progress)
+	{
+		LONG percent = 0;
+
+		if (auto hr = progress->get_PercentComplete(&percent); FAILED(hr))
+		{
+			throw std::system_error(hr, std::system_category(), __FUNCTION__);
+		}
+
+		return percent;
+	}
 
 	template<class Result>
 	LONG GetWUAErrorCode(Result result)

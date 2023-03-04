@@ -11,17 +11,25 @@
 
 struct Callback
 {
-	long m_total;
-	long m_index{ -1 };
-
 	void operator()(long index, OperationResultCode code, IUpdate * update, IUpdateDownloadResult * result, IDownloadProgress * progress)
 	{
-		std::wcout << index << ' ' << update << progress << ' ' << result;
+		if (code >= orcSucceeded)
+		{
+			auto downloaded = waffle::GetTotalBytesDownloaded(progress);
+			auto toDownload = waffle::GetTotalBytesToDownload(progress);
+
+			std::wcout << update << std::format(L" {}/{} ", downloaded, toDownload) << result << std::endl;
+		}
 	}
 
 	void operator()(long index, OperationResultCode code, IUpdate * update, IUpdateInstallationResult * result, IInstallationProgress * progress)
 	{
-		std::wcout << index << ' ' << update << progress << ' ' << result;
+		if (code >= orcSucceeded)
+		{
+			auto percent = waffle::GetPercentComplete(progress);
+
+			std::wcout << update << std::format(L" {:3d}% ", percent) << result << std::endl;
+		}
 	}
 };
 
@@ -44,8 +52,8 @@ int wmain()
 
 		if (!updates.empty())
 		{
-			session.Download(updates, Callback{ updates.size() });
-			session.Install(updates, Callback{ updates.size() });
+			session.Download(updates, Callback{});
+			session.Install(updates, Callback{});
 		}
 
 		if (!session.RebootRequired())
