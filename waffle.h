@@ -12,6 +12,7 @@ using com_ptr_t = _com_ptr_t<_com_IIID<T, &__uuidof(T)>>;
 
 #include <cstdlib>
 #include <format>
+#include <utility>
 #include <iostream>
 #include <functional>
 #include <system_error>
@@ -280,7 +281,7 @@ namespace waffle
 		}
 	};
 
-	std::wstring GetTotalBytes(IDownloadProgress * progress);
+	std::pair<ULONGLONG, ULONGLONG> GetTotalBytes(IDownloadProgress * progress);
 
 	template<class Progress>
 	LONG GetPercentComplete(Progress * progress)

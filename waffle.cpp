@@ -240,6 +240,11 @@ namespace waffle
 			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 		}
 
+		if (bytes.Hi32 != 0)
+		{
+			throw std::overflow_error(MACRO_SOURCE_LOCATION());
+		}
+
 		return bytes.Lo64;
 	}
 
@@ -252,46 +257,17 @@ namespace waffle
 			throw std::system_error(hr, std::system_category(), MACRO_SOURCE_LOCATION());
 		}
 
+		if (bytes.Hi32 != 0)
+		{
+			throw std::overflow_error(MACRO_SOURCE_LOCATION());
+		}
+
 		return bytes.Lo64;
 	}
 
-	std::wstring GetToatalBytes(unsigned long long bytes, unsigned long long total)
+	std::pair<ULONGLONG, ULONGLONG> GetTotalBytes(IDownloadProgress * progress)
 	{
-		const auto KB = 1024ULL;
-		const auto MB = 1024 * KB;
-		const auto GB = 1024 * MB;
-
-		if (auto value = (double) total / KB; value < 9.95L)
-			return std::format(L"{:.1F}/{:.1F}KB", (double) bytes / KB, value); // 9.9KB
-		else if (value < 10.0L)
-			return std::format(L"{:2d}/10KB", bytes / KB); // !!!
-
-		if (total <= (99 * KB))
-			return std::format(L"{:2d}/{:d}KB", bytes / KB, total / KB); // 99KB 
-
-		if (total <= (999 * KB))
-			return std::format(L"{:3d}/{:d}KB", bytes / KB, total / KB); // 999KB 
-
-		if (auto value = (double) total / MB; value < 9.95L)
-			return std::format(L"{:.1F}/{:.1F}MB", (double) bytes / MB, value); // 9.9MB 
-		else if (value < 10.0L)
-			return std::format(L"{:2d}/10MB", bytes / MB); // !!!
-
-		if (total <= (99 * MB))
-			return std::format(L"{:2d}/{:d}MB", bytes / MB, total / MB); // 99MB 
-
-		if (total <= (999 * MB))
-			return std::format(L"{:3d}/{:d}MB", bytes / MB, total / MB); // 999MB 
-
-		return std::format(L"{:.1F}/{:.1F}GB", (double) bytes / GB, (double) total / GB); // 9.9GB 
-	}
-
-	std::wstring GetTotalBytes(IDownloadProgress * progress)
-	{
-		auto downloaded = GetTotalBytesDownloaded(progress);
-		auto toDownload = GetTotalBytesToDownload(progress);
-
-		return GetToatalBytes(downloaded, toDownload);
+		return { GetTotalBytesToDownload(progress), GetTotalBytesDownloaded(progress) };
 	}
 }
 

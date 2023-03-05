@@ -9,18 +9,49 @@
 #include <iostream>
 #include "waffle.h"
 
+std::wstring FormatToatalBytes(auto bytes, auto total)
+{
+	const auto KB = 1024ULL;
+	const auto MB = 1024 * KB;
+	const auto GB = 1024 * MB;
+
+	if (auto value = (double) total / KB; value < 9.95L)
+		return std::format(L"{:.1F}/{:.1F}KB ", (double) bytes / KB, value); // 9.9KB
+	else if (value < 10.0L)
+		return std::format(L"{:2d}/10KB ", bytes / KB); // !!!
+
+	if (total <= (99 * KB))
+		return std::format(L"{:2d}/{:d}KB ", bytes / KB, total / KB); // 99KB 
+
+	if (total <= (999 * KB))
+		return std::format(L"{:3d}/{:d}KB ", bytes / KB, total / KB); // 999KB 
+
+	if (auto value = (double) total / MB; value < 9.95L)
+		return std::format(L"{:.1F}/{:.1F}MB ", (double) bytes / MB, value); // 9.9MB 
+	else if (value < 10.0L)
+		return std::format(L"{:2d}/10MB ", bytes / MB); // !!!
+
+	if (total <= (99 * MB))
+		return std::format(L"{:2d}/{:d}MB ", bytes / MB, total / MB); // 99MB 
+
+	if (total <= (999 * MB))
+		return std::format(L"{:3d}/{:d}MB ", bytes / MB, total / MB); // 999MB 
+
+	return std::format(L"{:.1F}/{:.1F}GB ", (double) bytes / GB, (double) total / GB); // 9.9GB 
+}
+
 struct Callback
 {
 	void operator()(long index, OperationResultCode code, IUpdate * update, IUpdateDownloadResult * result, IDownloadProgress * progress)
 	{
 		if (code >= orcSucceeded)
 		{
-			auto bytes = waffle::GetTotalBytes(progress);
+			auto [total, bytes] = waffle::GetTotalBytes(progress);
 
 			if (code == orcSucceeded)
-				std::wcout << update << bytes << std::endl;
+				std::wcout << FormatToatalBytes(bytes, total) << update << std::endl;
 			else
-				std::wcout << update << bytes << result << std::endl;
+				std::wcout << FormatToatalBytes(bytes, total) << update << L' ' << result << std::endl;
 		}
 	}
 
@@ -31,9 +62,9 @@ struct Callback
 			auto percent = waffle::GetPercentComplete(progress);
 
 			if (code == orcSucceeded)
-				std::wcout << update << std::format(L" {:3d}%", percent) << std::endl;
+				std::wcout << std::format(L"{:3d}% ", percent) << update << std::endl;
 			else
-				std::wcout << update << std::format(L" {:3d}% ", percent) << result << std::endl;
+				std::wcout << std::format(L" {:3d}% ", percent) << update << L' ' << result << std::endl;
 		}
 	}
 };
