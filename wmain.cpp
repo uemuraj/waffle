@@ -18,24 +18,24 @@ std::wstring FormatToatalBytes(auto bytes, auto total)
 	if (auto value = (double) total / KB; value < 9.95L)
 		return std::format(L"{:.1F}/{:.1F}KB ", (double) bytes / KB, value); // 9.9KB
 	else if (value < 10.0L)
-		return std::format(L"{:2d}/10KB ", bytes / KB); // !!!
+		return std::format(L"{:d}/10KB ", bytes / KB); // !!!
 
 	if (total <= (99 * KB))
-		return std::format(L"{:2d}/{:d}KB ", bytes / KB, total / KB); // 99KB 
+		return std::format(L"{:d}/{:d}KB ", bytes / KB, total / KB); // 99KB 
 
 	if (total <= (999 * KB))
-		return std::format(L"{:3d}/{:d}KB ", bytes / KB, total / KB); // 999KB 
+		return std::format(L"{:d}/{:d}KB ", bytes / KB, total / KB); // 999KB 
 
 	if (auto value = (double) total / MB; value < 9.95L)
 		return std::format(L"{:.1F}/{:.1F}MB ", (double) bytes / MB, value); // 9.9MB 
 	else if (value < 10.0L)
-		return std::format(L"{:2d}/10MB ", bytes / MB); // !!!
+		return std::format(L"{:d}/10MB ", bytes / MB); // !!!
 
 	if (total <= (99 * MB))
-		return std::format(L"{:2d}/{:d}MB ", bytes / MB, total / MB); // 99MB 
+		return std::format(L"{:d}/{:d}MB ", bytes / MB, total / MB); // 99MB 
 
 	if (total <= (999 * MB))
-		return std::format(L"{:3d}/{:d}MB ", bytes / MB, total / MB); // 999MB 
+		return std::format(L"{:d}/{:d}MB ", bytes / MB, total / MB); // 999MB 
 
 	return std::format(L"{:.1F}/{:.1F}GB ", (double) bytes / GB, (double) total / GB); // 9.9GB 
 }
