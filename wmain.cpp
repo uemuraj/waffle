@@ -15,10 +15,12 @@ struct Callback
 	{
 		if (code >= orcSucceeded)
 		{
-			auto downloaded = waffle::GetTotalBytesDownloaded(progress);
-			auto toDownload = waffle::GetTotalBytesToDownload(progress);
+			auto bytes = waffle::GetTotalBytes(progress);
 
-			std::wcout << update << std::format(L" {}/{} ", downloaded, toDownload) << result << std::endl;
+			if (code == orcSucceeded)
+				std::wcout << update << bytes << std::endl;
+			else
+				std::wcout << update << bytes << result << std::endl;
 		}
 	}
 
@@ -28,7 +30,10 @@ struct Callback
 		{
 			auto percent = waffle::GetPercentComplete(progress);
 
-			std::wcout << update << std::format(L" {:3d}% ", percent) << result << std::endl;
+			if (code == orcSucceeded)
+				std::wcout << update << std::format(L" {:3d}%", percent) << std::endl;
+			else
+				std::wcout << update << std::format(L" {:3d}% ", percent) << result << std::endl;
 		}
 	}
 };

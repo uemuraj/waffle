@@ -10,7 +10,6 @@
 template<typename T>
 using com_ptr_t = _com_ptr_t<_com_IIID<T, &__uuidof(T)>>;
 
-#include <cstdint>
 #include <cstdlib>
 #include <format>
 #include <iostream>
@@ -19,11 +18,8 @@ using com_ptr_t = _com_ptr_t<_com_IIID<T, &__uuidof(T)>>;
 
 std::wostream & operator<<(std::wostream & out, const char * wcs);
 std::wostream & operator<<(std::wostream & out, IUpdate * update);
-std::wostream & operator<<(std::wostream & out, IDownloadProgress * progress);
-std::wostream & operator<<(std::wostream & out, IInstallationProgress * progress);
 std::wostream & operator<<(std::wostream & out, IUpdateDownloadResult * result);
 std::wostream & operator<<(std::wostream & out, IUpdateInstallationResult * result);
-std::wostream & operator<<(std::wostream & out, OperationResultCode code);
 
 namespace waffle
 {
@@ -284,8 +280,7 @@ namespace waffle
 		}
 	};
 
-	std::uintmax_t GetTotalBytesDownloaded(IDownloadProgress * progress);
-	std::uintmax_t GetTotalBytesToDownload(IDownloadProgress * progress);
+	std::wstring GetTotalBytes(IDownloadProgress * progress);
 
 	template<class Progress>
 	LONG GetPercentComplete(Progress * progress)
