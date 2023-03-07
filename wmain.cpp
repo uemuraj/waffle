@@ -51,7 +51,7 @@ struct Callback
 			if (code == orcSucceeded)
 				std::wcout << FormatToatalBytes(bytes, total) << update << std::endl;
 			else
-				std::wcout << FormatToatalBytes(bytes, total) << update << L' ' << result << std::endl;
+				std::wcout << FormatToatalBytes(bytes, total) << update << std::endl << L" !!! " << result << std::endl;
 		}
 	}
 
@@ -64,7 +64,7 @@ struct Callback
 			if (code == orcSucceeded)
 				std::wcout << std::format(L"{:3d}% ", percent) << update << std::endl;
 			else
-				std::wcout << std::format(L" {:3d}% ", percent) << update << L' ' << result << std::endl;
+				std::wcout << std::format(L"{:3d}% ", percent) << update << std::endl << L" !!! " << result << std::endl;
 		}
 	}
 };
