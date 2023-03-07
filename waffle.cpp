@@ -86,7 +86,7 @@ namespace waffle
 
 		if (auto code = GetOperationCode(result); code != orcSucceeded)
 		{
-			throw std::system_error(code, std::system_category(), MACRO_SOURCE_LOCATION());
+			ValidateOperationCode(code, MACRO_SOURCE_LOCATION());
 		}
 
 		com_ptr_t<IUpdateCollection> items;
@@ -158,7 +158,7 @@ namespace waffle
 
 		if (auto code = GetOperationCode(result); code != orcSucceeded)
 		{
-			throw std::system_error(code, std::system_category(), MACRO_SOURCE_LOCATION());
+			ValidateOperationCode(code, MACRO_SOURCE_LOCATION());
 		}
 	}
 
@@ -187,21 +187,7 @@ namespace waffle
 
 		if (auto code = GetOperationCode(result); code != orcSucceeded)
 		{
-			switch (code)
-			{
-			case orcNotStarted:
-				throw std::runtime_error("Not Started.");
-			case orcInProgress:
-				throw std::runtime_error("In Pogress.");
-			case orcSucceededWithErrors:
-				throw std::runtime_error("Succeeded With Errors.");
-			case orcFailed:
-				throw std::runtime_error("Failed.");
-			case orcAborted:
-				throw std::runtime_error("Aborted.");
-			default:
-				throw std::runtime_error(MACRO_SOURCE_LOCATION());
-			}
+			ValidateOperationCode(code, MACRO_SOURCE_LOCATION());
 		}
 
 		m_rebootRequired = GetRebootRequired(result);
@@ -334,6 +320,26 @@ std::wostream & operator<<(std::wostream & out, IUpdateInstallationResult * resu
 }
 
 #define MACRO_ERROR_MESSAGE(code, message) case code: return message
+
+void waffle::ValidateOperationCode(OperationResultCode code, const char * what)
+{
+	switch (code)
+	{
+	case orcNotStarted:
+		throw std::runtime_error(std::string(what) + ": Not Started.");
+	case orcInProgress:
+		throw std::runtime_error(std::string(what) + ": In Pogress.");
+	case orcSucceeded:
+	case orcSucceededWithErrors:
+		return;
+	case orcFailed:
+		throw std::runtime_error(std::string(what) + ": Failed.");
+	case orcAborted:
+		throw std::runtime_error(std::string(what) + ": Aborted.");
+	default:
+		throw std::runtime_error(std::format("{}: code({}).", what, (int) code));
+	}
+}
 
 const char * waffle::GetWUAErrorMessage(LONG code)
 {

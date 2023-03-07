@@ -324,6 +324,8 @@ namespace waffle
 		return code;
 	}
 
+	void ValidateOperationCode(OperationResultCode code, const char * what);
+
 	template<class Result>
 	bool GetRebootRequired(Result result)
 	{
