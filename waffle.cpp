@@ -187,7 +187,21 @@ namespace waffle
 
 		if (auto code = GetOperationCode(result); code != orcSucceeded)
 		{
-			throw std::system_error(code, std::system_category(), MACRO_SOURCE_LOCATION());
+			switch (code)
+			{
+			case orcNotStarted:
+				throw std::runtime_error("Not Started.");
+			case orcInProgress:
+				throw std::runtime_error("In Pogress.");
+			case orcSucceededWithErrors:
+				throw std::runtime_error("Succeeded With Errors.");
+			case orcFailed:
+				throw std::runtime_error("Failed.");
+			case orcAborted:
+				throw std::runtime_error("Aborted.");
+			default:
+				throw std::runtime_error(MACRO_SOURCE_LOCATION());
+			}
 		}
 
 		m_rebootRequired = GetRebootRequired(result);
