@@ -100,6 +100,12 @@ namespace waffle
 		void Notify();
 	};
 
+	std::pair<ULONGLONG, ULONGLONG> GetTotalBytes(IDownloadProgress * progress);
+
+	void ValidateOperationCode(OperationResultCode code, const char * what);
+
+	const char * GetWUAErrorMessage(LONG code);
+
 	template<class T>
 	struct Unknown : public T
 	{
@@ -156,7 +162,10 @@ namespace waffle
 
 			if (auto hr = (worker->*m_beginMethod)(arg, this, state, &job); FAILED(hr))
 			{
-				throw std::system_error(hr, std::system_category(), __FUNCTION__);
+				if (auto msg = waffle::GetWUAErrorMessage(hr); msg != nullptr)
+					throw std::runtime_error(msg);
+				else
+					throw std::system_error(hr, std::system_category(), __FUNCTION__);
 			}
 
 			return job;
@@ -168,7 +177,10 @@ namespace waffle
 
 			if (auto hr = (worker->*m_endMethod)(job, &result); FAILED(hr))
 			{
-				throw std::system_error(hr, std::system_category(), __FUNCTION__);
+				if (auto msg = waffle::GetWUAErrorMessage(hr); msg != nullptr)
+					throw std::runtime_error(msg);
+				else
+					throw std::system_error(hr, std::system_category(), __FUNCTION__);
 			}
 
 			return result;
@@ -281,8 +293,6 @@ namespace waffle
 		}
 	};
 
-	std::pair<ULONGLONG, ULONGLONG> GetTotalBytes(IDownloadProgress * progress);
-
 	template<class Progress>
 	LONG GetPercentComplete(Progress * progress)
 	{
@@ -299,8 +309,6 @@ namespace waffle
 	template<class Result>
 	LONG GetWUAErrorCode(Result result)
 	{
-		// https://learn.microsoft.com/en-us/windows/win32/wua_sdk/wua-success-and-error-codes-
-
 		LONG code = 0;
 
 		if (auto hr = result->get_HResult(&code); FAILED(hr))
@@ -324,8 +332,6 @@ namespace waffle
 		return code;
 	}
 
-	void ValidateOperationCode(OperationResultCode code, const char * what);
-
 	template<class Result>
 	bool GetRebootRequired(Result result)
 	{
@@ -338,6 +344,4 @@ namespace waffle
 
 		return (rebootRequired == VARIANT_TRUE);
 	}
-
-	const char * GetWUAErrorMessage(LONG code);
 }
